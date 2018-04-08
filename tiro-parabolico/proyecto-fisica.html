@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<title>Proyecto Física.</title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="css/styles.css" />
+	
+	<script type="text/javascript" src="js/three.min.js"></script>
+	<script type="text/javascript" src="js/stats.js"></script>
+	<script type="text/javascript" src="../physi.js"></script>
+	
+	<script type="text/javascript">
+	'use strict';
+	
+	Physijs.scripts.worker = '../physijs_worker.js';
+	Physijs.scripts.ammo = 'tiro-parabolico/js/ammo.js';
+	
+	var initScene, initEventHandling, render, loader,
+		renderer, render_stats, physics_stats, scene, dir_light, am_light, camera,
+		campo, campo_material, intersect_plane, porteria_material, pelota;
+		
+	initScene = function() {
+		renderer = new THREE.WebGLRenderer({ antialias: true });
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		renderer.shadowMap.enabled = true;
+		renderer.shadowMapSoft = true;
+		document.getElementById( 'viewport' ).appendChild( renderer.domElement );
+		
+		render_stats = new Stats();
+		render_stats.domElement.style.position = 'absolute';
+		render_stats.domElement.style.top = '1px';
+		render_stats.domElement.style.zIndex = 100;
+		document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
+
+		physics_stats = new Stats();
+		physics_stats.domElement.style.position = 'absolute';
+		physics_stats.domElement.style.top = '50px';
+		physics_stats.domElement.style.zIndex = 100;
+		document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
+		
+		scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
+		scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+		scene.addEventListener(
+			'update',
+			function() {
+
+				scene.simulate( undefined, 1 );
+				physics_stats.update();
+			}
+		);
+		
+		camera = new THREE.PerspectiveCamera(
+			25,
+			window.innerWidth / window.innerHeight,
+			1,
+			1000
+		);
+		
+		//Cámara posición
+		//camera.position.set( 50, 0, 0 );
+		//camera.lookAt(new THREE.Vector3( 0, 5, -5 ));
+		//scene.add( camera );
+		
+		camera.position.set( 25, 20, 25 );
+		camera.lookAt(new THREE.Vector3( 0, 7, 0 ));
+		scene.add( camera );
+		
+		// ambient light
+		am_light = new THREE.AmbientLight( 0x444444 );
+		scene.add( am_light );
+
+		// directional light
+		dir_light = new THREE.DirectionalLight( 0xFFFFFF );
+		dir_light.position.set( 20, 30, -5 );
+		dir_light.target.position.copy( scene.position );
+		dir_light.castShadow = true;
+		dir_light.shadowCameraLeft = -30;
+		dir_light.shadowCameraTop = -30;
+		dir_light.shadowCameraRight = 30;
+		dir_light.shadowCameraBottom = 30;
+		dir_light.shadowCameraNear = 20;
+		dir_light.shadowCameraFar = 200;
+		dir_light.shadowBias = -.001
+		dir_light.shadowMapWidth = dir_light.shadowMapHeight = 2048;
+		dir_light.shadowDarkness = .5;
+		scene.add( dir_light );
+
+		// Loader
+		loader = new THREE.TextureLoader();
+		
+		// Materials
+		campo_material = Physijs.createMaterial(
+			new THREE.MeshLambertMaterial({ map: loader.load( 'images/grass.png' )}),
+			.9, // high friction
+			.2 // low restitution
+		);
+		campo_material.map.wrapS = campo_material.map.wrapT = THREE.RepeatWrapping;
+		campo_material.map.repeat.set( 5, 5 );
+		
+		// Campo
+		campo = new Physijs.BoxMesh(
+			new THREE.BoxGeometry(30, 2, 30),campo_material,0, { restitution: .2, friction: .8 }
+		);
+		//Campo posición
+		campo.position.x = -5;
+		campo.position.y = 1;
+		campo.position.z = -5;
+		campo.receiveShadow = true;
+		scene.add( campo );
+		
+		intersect_plane = new THREE.Mesh(
+			new THREE.PlaneGeometry( 150, 150 ),
+			new THREE.MeshBasicMaterial({ opacity: 0, transparent: true })
+		);
+		intersect_plane.rotation.x = Math.PI / -2;
+		scene.add( intersect_plane );
+
+		//Portería
+		porteria_material = Physijs.createMaterial(	new THREE.MeshLambertMaterial({ map: loader.load( 'images/rocks.jpg' ) }), .6, .2);
+		porteria_material.map.wrapS = porteria_material.map.wrapT = THREE.RepeatWrapping;
+		porteria_material.map.repeat.set( .25, .25 );
+		
+		var porteria, _object;
+		porteria = new Physijs.BoxMesh(
+			new THREE.BoxGeometry( 15, .5, .6 ),
+			porteria_material
+		);
+		porteria.position.y = 5;
+		porteria.position.z = -2.5;
+		porteria.castShadow = true;
+		porteria.receiveShadow = true;
+		
+		// Peldaños porteria
+		_object = new Physijs.BoxMesh(
+			new THREE.BoxGeometry( .6, 5, .6 ),
+			porteria_material
+		);
+		_object.position.y = -2.7;
+		_object.position.x = -7.2;
+		_object.castShadow = true;
+		_object.receiveShadow = true;
+		porteria.add( _object );
+		
+		_object = new Physijs.BoxMesh(
+			new THREE.BoxGeometry( .6, 5, .6 ),
+			porteria_material
+		);
+		_object.position.y = -2.7;
+		_object.position.x = 7.2;
+		_object.castShadow = true;
+		_object.receiveShadow = true;
+		porteria.add( _object );
+		
+		porteria.position.y = 7.2;
+		porteria.position.x = -3;
+		porteria.position.z = -10;
+		
+		scene.add( porteria );
+		
+		//Pelota
+		var sphere_geometry = new THREE.SphereGeometry( 0.8, 32, 32 )
+		pelota = new Physijs.SphereMesh(sphere_geometry);
+		
+		pelota.material.color.setRGB( 10, 10, 10 );
+		pelota.castShadow = true;
+		pelota.receiveShadow = true;
+		
+		pelota.position.set(-5,3,7);
+		
+		//EVENTO PARA VER LA COLISION DE LA PELOTA Y EL SUELO
+		pelota.addEventListener( 'collision', function() {
+			console.log("tocó el suelo!!!!");
+		});
+		
+		scene.add( pelota );
+		
+		requestAnimationFrame( render );
+		scene.simulate();
+	};
+	
+	render = function() {
+		requestAnimationFrame( render );
+		renderer.render( scene, camera );
+		render_stats.update();
+	};
+	
+	window.onload = initScene;
+	</script>
+</head>
+
+<body>
+	<div id="heading">
+		<h1>Proyecto</h1>
+	</div>
+	<div id="viewport"></div>
+</body>
+
+</html>
