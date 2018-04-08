@@ -9,13 +9,13 @@
 	
 	<script type="text/javascript" src="js/three.min.js"></script>
 	<script type="text/javascript" src="js/stats.js"></script>
-	<script type="text/javascript" src="js/physi.js"></script>
+	<script type="text/javascript" src="../physi.js"></script>
 	
 	<script type="text/javascript">
 	'use strict';
 	
-	Physijs.scripts.worker = 'tiro-parabolico/js/physijs_worker.js';
-	Physijs.scripts.ammo = 'tiro-parabolico/js/ammo.js';
+	Physijs.scripts.worker = '../physijs_worker.js';
+	Physijs.scripts.ammo = 'TiroParabolico/js/ammo.js';
 	
 	var initScene, initEventHandling, render, loader,
 		renderer, render_stats, physics_stats, scene, dir_light, am_light, camera,
@@ -167,7 +167,7 @@
 		pelota.castShadow = true;
 		pelota.receiveShadow = true;
 		
-		pelota.position.set(-5,3,7);
+		pelota.position.set(-5,10,7);
 		
 		//EVENTO PARA VER LA COLISION DE LA PELOTA Y EL SUELO
 		pelota.addEventListener( 'collision', function() {
