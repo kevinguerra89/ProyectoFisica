@@ -52,20 +52,36 @@
 		);
 		
 		camera = new THREE.PerspectiveCamera(
-			25,
+			35,
 			window.innerWidth / window.innerHeight,
 			1,
 			1000
 		);
 		
-		//Cámara posición
-		//camera.position.set( 50, 0, 0 );
-		//camera.lookAt(new THREE.Vector3( 0, 5, -5 ));
-		//scene.add( camera );
+		//Camara posición
+		camera.position.set( 35, 10, 35 );
+		//Enfoque posición
+		camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
 		
-		camera.position.set( 25, 20, 25 );
-		camera.lookAt(new THREE.Vector3( 0, 7, 0 ));
 		scene.add( camera );
+		
+		pespectiva1.addEventListener("click", function(){
+			camera.position.set( 35, 10, 35 );
+			camera.lookAt(new THREE.Vector3( 0, 0, 0 ));
+		});
+		pespectiva2.addEventListener("click", function(){
+			camera.position.set( 15, 10, 40);
+			camera.lookAt(new THREE.Vector3( 15, 0, 0 ));
+		});
+		pespectiva3.addEventListener("click", function(){
+			camera.position.set( 40, 5, 15 );
+			camera.lookAt(new THREE.Vector3( 0, 0, 15 ));
+		});
+		pespectiva4.addEventListener("click", function(){
+			camera.position.set( 15, 40, 15 );
+			camera.lookAt(new THREE.Vector3( 15, 0, 15 ));
+		});
+		
 		
 		// ambient light
 		am_light = new THREE.AmbientLight( 0x444444 );
@@ -104,9 +120,9 @@
 			new THREE.BoxGeometry(30, 0.5, 30),campo_material,0, { restitution: .2, friction: .8 }
 		);
 		//Campo posición
-		campo.position.x = -5;
-		campo.position.y = -0.5;
-		campo.position.z = -5;
+		campo.position.x = campo.geometry.parameters.width/2;
+		campo.position.y = campo.geometry.parameters.height/2;
+		campo.position.z = campo.geometry.parameters.depth/2;
 		campo.receiveShadow = true;
 		scene.add( campo );
 		
@@ -118,42 +134,43 @@
 		scene.add( intersect_plane );
 
 		//Portería
+		//PosiciónX = (campoTam / 2) - (porteriaTam / 2)
 		porteria_material = Physijs.createMaterial(	new THREE.MeshLambertMaterial({ map: loader.load( 'images/rocks.jpg' ) }), .6, .2);
 		porteria_material.map.wrapS = porteria_material.map.wrapT = THREE.RepeatWrapping;
 		porteria_material.map.repeat.set( .25, .25 );
 		
 		var porteria, _object;
 		porteria = new Physijs.BoxMesh(
-			new THREE.BoxGeometry( 7.32, .5, .6 ),
+			new THREE.BoxGeometry( 7.32, .3, .3 ),
 			porteria_material
 		);
-		porteria.position.y = 2.44;
 		porteria.castShadow = true;
 		porteria.receiveShadow = true;
 		
 		// Peldaños porteria
 		_object = new Physijs.BoxMesh(
-			new THREE.BoxGeometry( .5, 2.44, .5 ),
+			new THREE.BoxGeometry( .3, 2.44, .3 ),
 			porteria_material
 		);
-		_object.position.y =-1.44;
-		_object.position.x = -3.41;
+		_object.position.x = (((campo.geometry.parameters.width/2) - (porteria.geometry.parameters.width/2)) - (campo.geometry.parameters.width/2)) - (porteria.geometry.parameters.depth/2);
+		_object.position.y = -(_object.geometry.parameters.height/2);
 		_object.castShadow = true;
 		_object.receiveShadow = true;
 		porteria.add( _object );
 		
 		_object = new Physijs.BoxMesh(
-			new THREE.BoxGeometry( .5, 2.44, .5 ),
+			new THREE.BoxGeometry( .3, 2.44, .3 ),
 			porteria_material
 		);
-		_object.position.y = -1.44;
-		_object.position.x = 3.41;
+		_object.position.x = ((campo.geometry.parameters.width/2) + (porteria.geometry.parameters.width/2)) - (campo.geometry.parameters.width/2) + (porteria.geometry.parameters.depth/2);
+		_object.position.y = -(_object.geometry.parameters.height/2);
 		_object.castShadow = true;
 		_object.receiveShadow = true;
 		porteria.add( _object );
 		
-		porteria.position.x = -3;
-		porteria.position.z = -10;
+		porteria.position.x = (campo.geometry.parameters.width/2);
+		porteria.position.y = (_object.geometry.parameters.height) + (campo.geometry.parameters.height);
+		porteria.position.z = 5;
 		
 		scene.add( porteria );
 		
@@ -165,7 +182,7 @@
 		pelota.castShadow = true;
 		pelota.receiveShadow = true;
 		
-		pelota.position.set(-5,10,7);
+		pelota.position.set(15,0.7,15);
 		
 		//EVENTO PARA VER LA COLISION DE LA PELOTA Y EL SUELO
 		pelota.addEventListener( 'collision', function() {
@@ -175,15 +192,35 @@
 		
 		scene.add( pelota );
 		
-		gravityButton.addEventListener("click", function(){
+		resetPelota.addEventListener("click", function(){
 			time = new THREE.Clock();
 			time.start();
-			pelota.position.set( -5, 10, 7 );
+			pelota.position.set( 15, 0.7, 15 );
 			pelota.__dirtyPosition = true;
+			
+			//var velocidad = pelota.getLinearVelocity();
+			//pelota.setLinearVelocity(new THREE.Vector3(0,0,0));
+			
+			//var force = new THREE.Vector3(0, 0, 1);
+			//pelota.applyCentralForce(force);
+		});
+		
+		forceButton.addEventListener("click", function(){
+			/*var force = new THREE.Vector3(0, -10, -1);
+			var offset = new THREE.Vector3(0, 0, 0);
+			pelota.applyImpulse(force, offset);*/
+			
+			//var force = new THREE.Vector3(0, 0, -1);
+			//pelota.applyCentralForce(force);
+			pelota.setLinearVelocity(new THREE.Vector3(10,10,10));
 		});
 		
 		requestAnimationFrame( render );
 		scene.simulate();
+	};
+	
+	function getRandomInt(min, max) {
+		return Math.floor(Math.random() * (max - min)) + min;
 	};
 	
 	render = function() {
@@ -200,7 +237,13 @@
 <body>
 	<div id="heading">
 		<h1>Proyecto</h1>
-		<button id="gravityButton">Probar gravedad</button>
+		<button id="forceButton">Probar fuerza</button>
+		<button id="resetPelota">Resetear pelota</button>
+		<br>
+		<button id="pespectiva1">Pespectiva Normal</button>
+		<button id="pespectiva2">Pespectiva porteria</button>
+		<button id="pespectiva3">Pespectiva 2d</button>
+		<button id="pespectiva4">Pespectiva Arriba</button>
 	</div>
 	<div id="viewport"></div>
 </body>
