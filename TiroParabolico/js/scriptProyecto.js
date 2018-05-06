@@ -4,7 +4,7 @@ Physijs.scripts.worker = '../physijs_worker.js';
 Physijs.scripts.ammo = 'TiroParabolico/js/ammo.js';
 
 var initScene, initEventHandling, render, loader,
-	renderer, render_stats, physics_stats, scene, dir_light, am_light, camera,
+	renderer, scene, dir_light, am_light, camera,
 	campo, campo_material, intersect_plane, porteria_material, pelota;
 
 var time = new THREE.Clock();
@@ -16,24 +16,11 @@ initScene = function() {
 	renderer.shadowMapSoft = true;
 	document.getElementById( 'viewport' ).appendChild( renderer.domElement );
 	
-	render_stats = new Stats();
-	render_stats.domElement.style.position = 'absolute';
-	render_stats.domElement.style.top = '1px';
-	render_stats.domElement.style.zIndex = 100;
-	document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
-
-	physics_stats = new Stats();
-	physics_stats.domElement.style.position = 'absolute';
-	physics_stats.domElement.style.top = '50px';
-	physics_stats.domElement.style.zIndex = 100;
-	document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
-	
 	scene = new Physijs.Scene({ fixedTimeStep: 0.01 });
 	scene.addEventListener(
 		'update',
 		function() {
 			scene.simulate();
-			physics_stats.update();
 		}
 	);
 	
@@ -161,7 +148,7 @@ initScene = function() {
 	scene.add( porteria );
 	
 	//Pelota de futbol; radio de 11cm
-	var sphere_geometry = new THREE.SphereGeometry( 0.11, 32, 32 )
+	var sphere_geometry = new THREE.SphereGeometry( 0.15, 32, 32 )
 	pelota = new Physijs.SphereMesh(sphere_geometry);
 	pelota.mass = 1;
 	
@@ -179,40 +166,15 @@ initScene = function() {
 	
 	scene.add( pelota );
 	
-	resetPelota.addEventListener("click", function(){
-		//time = new THREE.Clock();
-		//time.start();
-		pelota.position.set( 15, 0.7, 15 );
-		pelota.__dirtyPosition = true;
-		
-		//var velocidad = pelota.getLinearVelocity();
-		//pelota.setLinearVelocity(new THREE.Vector3(0,0,0));
-		
-		//var force = new THREE.Vector3(0, 0, 1);
-		//pelota.applyCentralForce(force);
-	});
-	
-	var lol = new Physijs.BoxMesh(
-		new THREE.BoxGeometry( 1, 5, 1 ),
-		porteria_material
-	);
-	lol.position.x = 15;
-	lol.position.z = 16;
-	lol.position.y = 3;
-	lol.castShadow = true;
-	lol.receiveShadow = true;
-	scene.add( lol );
-	
-	forceButton.addEventListener("click", function(){
+	vButton.addEventListener("click", function(){
 		time = new THREE.Clock();
 		time.start();
-		/*var force = new THREE.Vector3(0, -10, -1);
-		var offset = new THREE.Vector3(0, 0, 0);
-		pelota.applyImpulse(force, offset);*/
 		
-		//var force = new THREE.Vector3(0, 100, 0);
+		//var force = new THREE.Vector3(0, 8000, -30000);
 		//pelota.applyCentralForce(force);
-		pelota.setLinearVelocity(new THREE.Vector3(0, 9.9, 0));
+		vx = document.getElementById("vx").value;
+		vy = document.getElementById("vy").value;
+		pelota.setLinearVelocity(new THREE.Vector3(0, vy, -1*vx));
 	});
 	
 	requestAnimationFrame( render );
@@ -226,7 +188,6 @@ function getRandomInt(min, max) {
 render = function() {
 	requestAnimationFrame( render );
 	renderer.render( scene, camera );
-	render_stats.update();
 };
 
 window.onload = initScene;
